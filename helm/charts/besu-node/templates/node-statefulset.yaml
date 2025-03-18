@@ -38,6 +38,7 @@ spec:
       name: data
       annotations:
         everest.io/disk-volume-type: {{ .Values.storage.storageType }}
+        everest.io/disk-volume-tags: '{"component":"baas","product":"tmn-coin"}'
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: {{ .Values.storage.storageClassName }}
@@ -48,7 +49,7 @@ spec:
   template:
     metadata:
       labels:
-{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}        
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         azure.workload.identity/use: "true"
 {{- end }}
         app.kubernetes.io/name: besu-statefulset
@@ -87,120 +88,6 @@ spec:
 {{- end}}
 
       containers:
-      
-{{- if .Values.quorumFlags.privacy }}
-      - name: {{ .Release.Name }}-tessera
-        image: {{ .Values.image.tessera.repository }}:{{ .Values.image.tessera.tag }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
-        resources:
-          requests:
-            cpu: "{{ .Values.node.tessera.resources.cpuRequest }}"
-            memory: "{{ .Values.node.tessera.resources.memRequest }}"
-          limits:
-            cpu: "{{ .Values.node.tessera.resources.cpuLimit }}"
-            memory: "{{ .Values.node.tessera.resources.memLimit }}"
-        env:
-          - name: POD_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: TESSERA_CONFIG_TYPE
-            value: "-09"
-        volumeMounts:
-{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
-          - name: secrets-store
-            mountPath: {{ .Values.node.tessera.keysPath }}
-            readOnly: true
-{{- else }}
-          - name: tessera-keys
-            mountPath: {{ .Values.node.tessera.keysPath }}
-            readOnly: true
-{{- end }}
-          - name: data
-            mountPath: {{ .Values.node.tessera.dataPath }}
-          - name: tessera-peers
-            mountPath: /config/tessera-peers
-        ports:
-          - name: tessera
-            containerPort: {{ .Values.node.tessera.port }}
-            protocol: TCP
-          - name: tessera-tp
-            containerPort: {{ .Values.node.tessera.tpport }}
-            protocol: TCP
-          - name: tessera-q2t
-            containerPort: {{ .Values.node.tessera.q2tport }}
-            protocol: TCP
-        command:
-          - /bin/sh
-          - -c
-        args:
-          - |
-            exec
-
-            cp {{ .Values.node.tessera.keysPath }}/tm.* {{ .Values.node.tessera.dataPath }}/ ;
-
-                cat <<EOF > {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
-                {
-                  "mode": "orion",
-                  "useWhiteList": false,
-                  "jdbc": {
-                    "username": "sa",
-                    "password": "",
-                    "url": "jdbc:h2:{{ .Values.node.tessera.dataPath }}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
-                    "autoCreateTables": true
-                  },
-                  "serverConfigs":[
-                  {
-                    "app":"ThirdParty",
-                    "enabled": true,
-                    "serverAddress": "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.tpport }}",
-                    "communicationType" : "REST"
-                  },
-                  {
-                    "app":"Q2T",
-                    "enabled": true,
-                    "serverAddress": "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.q2tport }}",
-                    "sslConfig": {
-                      "tls": "OFF"
-                    },
-                    "communicationType" : "REST"
-                  },
-                  {
-                    "app":"P2P",
-                    "enabled": true,
-                    "serverAddress": "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.port }}",
-                    "sslConfig": {
-                      "tls": "OFF"
-                    },
-                    "communicationType" : "REST"
-                  }
-                  ],
-                  "peer": $$(cat /config/tessera-peers/tesseraPeers),
-                  "keys": {
-                  {{ if .Values.node.tessera.password }}
-                    "passwordFile": "{{ .Values.node.tessera.passwordPath }}",
-                  {{ end }}
-                    "keyData": [
-                      {
-                        "privateKeyPath": "/keys/tm.key",
-                        "publicKeyPath": "/keys/tm.pub"
-                      }
-                    ]
-                  },
-                  "alwaysSendTo": []
-                }
-            EOF
-
-                cat {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
-                /tessera/bin/tessera -configfile {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
-
-{{- end }}
-
-
       - name: {{ .Release.Name }}-besu
         image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
         imagePullPolicy: {{ .Values.image.besu.pullPolicy }}
@@ -223,7 +110,7 @@ spec:
 {{- if .Values.node.besu.envBesuOpts }}
           - name: BESU_OPTS
             value: "{{ .Values.node.besu.envBesuOpts }}"
-{{- end }}    
+{{- end }}
 {{- if .Values.quorumFlags.usesBootnodes }}
           - name: BESU_BOOTNODES
             valueFrom:
@@ -240,11 +127,6 @@ spec:
           - name: besu-keys
             mountPath: {{ .Values.node.besu.keysPath }}
             readOnly: true
-{{- if .Values.quorumFlags.privacy }}
-          - name: tessera-keys
-            mountPath: {{ .Values.node.besu.privacy.pubkeysPath }}
-            readOnly: true
-{{- end }}            
 {{- end }}
 {{- if and .Values.node.besu.rpc.authenticationEnabled (or .Values.node.besu.rpc.publicRSAKey .Values.node.besu.rpc.credentialsFile) }}
           - name: besu-rpc-creds
@@ -288,13 +170,7 @@ spec:
             exec
             /opt/besu/bin/besu \
               --config-file=/etc/besu/config.toml \
-              --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
-              --min-gas-price=0 \
-              --tx-pool-min-gas-price=0 \
-              --tx-pool=sequenced \
-              --tx-pool-limit-by-account-percentage=1.0 \
-              --tx-pool-max-size=16384 \
-              --data-storage-format=FOREST
+              --Xdns-enabled=true --Xdns-update-enabled=true
         livenessProbe:
           httpGet:
             path: /metrics
@@ -328,7 +204,7 @@ spec:
               path: genesis.json
       - name: static-nodes
         configMap:
-          name: besu-peers
+          name: besu-peer-rpcs
           items:
             - key: static-nodes.json
               path: static-nodes.json
@@ -347,19 +223,6 @@ spec:
       - name: besu-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-keys
-{{- if .Values.quorumFlags.privacy }}
-      - name: tessera-keys
-        secret:
-          secretName: {{ include "besu-node.fullname" . }}-tessera-keys
-{{- end }}
-{{- end }}
-{{- if .Values.quorumFlags.privacy }}
-      - name: tessera-peers
-        configMap:
-          name: tessera-peers
-          items:
-            - key: tesseraPeers
-              path: tesseraPeers
 {{- end }}
 {{- if .Values.node.besu.permissions.enabled }}
       - name: permissions-config

@@ -5,7 +5,7 @@ quorumFlags:
   # this will erase keys - so be careful with this on validators
   removeKeysOnDelete: false
   isBootnode: true    # set this to true if this node is a bootnode
-  usesBootnodes: true # set this to true if the network you are connecting to use a bootnode/s that are deployed in the cluster 
+  usesBootnodes: true # set this to true if the network you are connecting to use a bootnode/s that are deployed in the cluster
 
 cluster:
   provider: local  # choose from: local | aws | azure
@@ -35,7 +35,7 @@ storage:
   pvcSizeLimit: "20Gi"
   storageClassName: "csi-disk-topology-retain"
   # NOTE: when you set this to Retain, the volume WILL persist after the chart is delete and you need to manually delete it
-  reclaimPolicy: "Delete" # choose from: Delete | Retain 
+  reclaimPolicy: "Delete" # choose from: Delete | Retain
   aws:
     provisioner: kubernetes.io/aws-ebs
     parameters:
@@ -102,7 +102,7 @@ node:
       host: "0.0.0.0"
       port: 9545
       # enable if using prometheus-stack metrics monitoring
-      serviceMonitorEnabled: false      
+      serviceMonitorEnabled: false
     metricsPush:
       enabled: false
       host: "5.5.5.5"
@@ -111,11 +111,6 @@ node:
       prometheusJob: "besu"
     sync:
       mode: "FAST"
-    privacy:
-      url: "http://localhost:9101"
-      pubkeysPath: "/tessera"
-      pubkeyFile: "tm.pub"
-      flexibleGroupsEnabled: false
     permissions:
       enabled: false
       filePath: ""
@@ -130,32 +125,12 @@ node:
         address: "0x0000000000000000000000000000000000009999"
       accountsContract:
         enabled: false
-        address: "0x0000000000000000000000000000000000008888"  
-
-  tessera:
-    resources:
-      cpuLimit: 1
-      cpuRequest: 0.1
-      memLimit: "2G"
-      memRequest: "1G"
-    tmkey: ""
-    tmpub: ""
-    password: "password"
-    passwordPath: "/keys/tm.password"
-    dataPath: "/data/tessera"
-    keysPath: "/keys"
-    port: 9000
-    tpport: 9080
-    q2tport: 9101
+        address: "0x0000000000000000000000000000000000008888"
 
 image:
   besu:
     repository: hyperledger/besu
-    tag: 24.6.0s
-    pullPolicy: IfNotPresent
-  tessera:
-    repository: quorumengineering/tessera
-    tag: 23.4.0
+    tag: 24.6.0
     pullPolicy: IfNotPresent
   hooks:
     repository: consensys/quorum-k8s-hooks

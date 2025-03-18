@@ -116,11 +116,21 @@ data:
     metrics-push-prometheus-job={{ .Values.node.besu.metricsPush.prometheusJob | quote }}
     {{ end }}
 
-    sync-mode={{ .Values.node.besu.sync.mode | quote }}
+    # TXPOOL
+    tx-pool="sequenced"
+    tx-pool-max-size=16384
+    tx-pool-min-gas-price=0
+    tx-pool-limit-by-account-percentage=1.0
+    tx-pool-retention-hours=2
 
     {{ if eq .Values.node.besu.sync.mode "FAST" }}
     fast-sync-min-peers=1
     {{ end }}
+
+    min-gas-price=0
+    data-storage-format="BONSAI"
+    sync-mode={{ .Values.node.besu.sync.mode | quote }}
+    cache-last-blocks=28
 
 {{ if and (.Values.node.besu.rpc.authenticationEnabled) (eq .Values.node.besu.rpc.type "jwt") (.Values.node.besu.rpc.publicRSAKey) }}
 ---
