@@ -41,7 +41,7 @@ storage:
       type: gp3
       fsType: ext4
 
-# fixes permissions of volumes becuase besu runs as user `besu` and volumes prefer `root`
+# fixes permissions of volumes because besu runs as user `besu` and volumes prefer `root`
 volumePermissionsFix:
   - local
   - aws
@@ -146,11 +146,11 @@ node:
 image:
   besu:
     repository: hyperledger/besu
-    tag: 24.8.0
+    tag: 24.12.1
     pullPolicy: IfNotPresent
   tessera:
     repository: quorumengineering/tessera
-    tag: 22.1.7
+    tag: 24.4
     pullPolicy: IfNotPresent
   hooks:
     repository: consensys/quorum-k8s-hooks
