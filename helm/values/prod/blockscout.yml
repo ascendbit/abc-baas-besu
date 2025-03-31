@@ -1,11 +1,16 @@
 config:
+  network:
+    id: 9988
+    name: Loyalty Mainnet
   prometheus:
     enabled: false
     ingressWhitelist:
       enabled: false
+    blackbox:
+      enabled: false
 frontend:
   image:
-    tag: "v1.37.2"
+    tag: "v1.38.2"
   replicaCount: 1
   resources:
     requests:
@@ -25,21 +30,17 @@ frontend:
     hostname: "blockscout.ascendbit.network"
     tls:
       enabled: true
-      secretName: blockscout-cert-tls
+      secretName: frontend-cert-tls
   env:
     NEXT_PUBLIC_AD_BANNER_PROVIDER: "none"
     NEXT_PUBLIC_AD_TEXT_PROVIDER: "none"
-    NEXT_PUBLIC_API_HOST: "api-blockscout.ascendbit.network"
     NEXT_PUBLIC_API_PORT: "443"
-    NEXT_PUBLIC_APP_HOST: "blockscout.ascendbit.network"
     NEXT_PUBLIC_APP_PORT: "443"
     NEXT_PUBLIC_IS_TESTNET: "false"
-    NEXT_PUBLIC_NETWORK_ID: 9988
-    NEXT_PUBLIC_NETWORK_NAME: "ABC BAAS"
     NEXT_PUBLIC_NETWORK_VERIFICATION_TYPE: "validation"
 blockscout:
   image:
-    tag: "6.10.0"
+    tag: "7.0.2"
   resources:
     requests:
       cpu: 1
@@ -59,14 +60,13 @@ blockscout:
     hostname: "api-blockscout.ascendbit.network"
     tls:
       enabled: true
-      secretName: api-blockscout-cert-tls
+      secretName: backend-cert-tls
   env:
     ETHEREUM_JSONRPC_VARIANT: "besu"
     ETHEREUM_JSONRPC_HTTP_INSECURE: "true"
     ETHEREUM_JSONRPC_HTTP_URL: "http://besu-node-archive-1.besu.svc.cluster.local:8545"
     DATABASE_URL: "postgresql://blockscout:nyruNA3LZ4DIHhiw@10.202.72.11:5432/blockscout"
     ETHEREUM_JSONRPC_TRACE_URL: "http://besu-node-archive-1.besu.svc.cluster.local:8545"
-    CHAIN_ID: "9988"
     NETWORK: "POA"
     SUBNETWORK: "POA Sokol"
     ETHEREUM_JSONRPC_WS_URL: "ws://besu-node-archive-1.besu.svc.cluster.local:8546"

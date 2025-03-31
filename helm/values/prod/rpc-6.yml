@@ -27,7 +27,7 @@ node:
     metrics:
       serviceMonitorEnabled: false
     customLabels:
-      nodeType: rpc-1
+      nodeType: rpc-6
     rpc:
       maxActiveConnections: 500
       api: '["ETH", "ADMIN", "NET", "QBFT", "TXPOOL"]'
@@ -40,7 +40,7 @@ storage:
 
 affinity:
   zone:
-  - ap-southeast-2b
+  - ap-southeast-2c
 
 ingress:
   enabled: false

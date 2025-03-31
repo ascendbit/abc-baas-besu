@@ -27,7 +27,7 @@ node:
     metrics:
       serviceMonitorEnabled: false
     customLabels:
-      nodeType: rpc-1
+      nodeType: rpc-5
     rpc:
       maxActiveConnections: 500
       api: '["ETH", "ADMIN", "NET", "QBFT", "TXPOOL"]'
